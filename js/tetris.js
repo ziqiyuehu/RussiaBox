@@ -9,6 +9,7 @@
 		init : function(opts) {
 			this.width = opts && opts.width || 12;
 			this.height = opts && opts.height || 10;
+			this.score = 0;
 			//六种初始形状
 			this.shapes = [
 				[{x:0,y:4},{x:0,y:5},{x:1,y:5},{x:1,y:6}],
@@ -18,6 +19,8 @@
 				[{x:0,y:4},{x:0,y:5},{x:0,y:6},{x:1,y:6}],
 				[{x:0,y:5},{x:0,y:6},{x:1,y:5},{x:1,y:6}]
 			];
+//			this.shapes = new Array();
+//			this.shapes.push([{x:0,y:4},{x:0,y:5},{x:1,y:5},{x:1,y:6}]);
 			//形状变换
 			this.rotateShapes = {
 				"0" : [
@@ -57,7 +60,15 @@
 			this.rotateIndex = 0;
 			this.copyShape = new Array();
 			this.gameTimer = null;
-			this.runningGameFlag = true;
+			/*
+			 * runningGameFlag
+			 * 0 : 未开始
+			 * 1 : 开始
+			 * 2 : 暂停
+			 * 3 : 结束 
+			 */
+			this.runningGameFlag = 0;
+			this.currShape = new Array();
 			this.initGameBox();
 			this.initEvent();
 		},
@@ -69,6 +80,7 @@
 				html += this.getSingleRow();
 			}
 			$("#gameDesk").empty().html(html).css({width:30*this.width+"px",height:30*this.height+"px"});
+			$("#gameDesk .box-row").css("width",30*this.width+"px");
 		},
 		
 		//获取一行html
@@ -85,18 +97,22 @@
 		randomShape : function(){
 			var arrayIndex = Math.floor(Math.random()*this.shapes.length);
 			shape = this.shapes[arrayIndex];
+			this.currShape = this.deepCopy(shape);
+			debugger
 			rotateShape = this.rotateShapes[arrayIndex];
 			this.rotateIndex = 0;
+			var returnFlag = true;
+			$(".box-shape .example-row .example-cell").removeClass("box-fill");
 			for(var i=0; i<4; i++){
 				if($("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").hasClass("box-static")){
-					return false;
-					break;
+					returnFlag = false;
+					$("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").addClass("box-red");
+				}else{
+					$("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").addClass("box-fill");
+					$(".box-shape .example-row:eq("+shape[i].x+") .example-cell:eq("+(shape[i].y-4)+")").addClass("box-fill");
 				}
 			}
-			for(var i=0; i<4; i++){ 
-				$("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").addClass("box-fill");
-			}
-			return true;
+			return returnFlag;
 		},
 		
 		//左移
@@ -142,10 +158,11 @@
 				}
 			}
 			this.rewrite(flag);
+			return flag;
 		},
 		
 		//旋转
-		rotateShape : function(){
+		rotate : function(){
 			copyShape = this.deepCopy(shape);
 			var shapeTransf = rotateShape[this.rotateIndex];
 			var flag = 0;
@@ -157,6 +174,21 @@
 				}
 			}
 			if(flag == 0){
+				$(".box-shape .example-row .example-cell").removeClass("box-fill");
+				var arrX = new Array();
+				var arrY = new Array();
+				debugger
+				for(var i=0; i<4; i++){
+					this.currShape[i].x += shapeTransf[i].x;
+					this.currShape[i].y += shapeTransf[i].y;
+					arrX.push(this.currShape[i].x);
+					arrY.push(this.currShape[i].y);
+				}
+				var minX = Math.min.apply(null,arrX),
+					minY = Math.min.apply(null,arrY);
+				for(var i=0; i<4; i++){
+					$(".box-shape .example-row:eq("+(this.currShape[i].x-minX)+") .example-cell:eq("+(this.currShape[i].y-minY)+")").addClass("box-fill");
+				}
 				this.rotateIndex++;
 				this.rotateIndex>=rotateShape.length && (this.rotateIndex = 0);
 			}
@@ -183,7 +215,13 @@
 		//开始游戏
 		startGame : function(){
 			var _this = this;
-			_this.runningGameFlag = true;
+			if(_this.runningGameFlag == 0 || _this.runningGameFlag == 2){
+				_this.runningGameFlag = 1;
+			}else if(_this.runningGameFlag == 1){
+				_this.runningGameFlag == 2;
+			}else{
+				return;
+			}
 			var shapeFlag = true;
 			if($("#gameDesk .box-row .box-fill").length == 0){
 				shapeFlag = _this.randomShape();
@@ -193,13 +231,14 @@
 				_this.gameTimer = setInterval(function(){
 					var downFlag = _this.moveBottom();
 					if(downFlag){
-						console.log("there is bottom,can't move down again!")
+						console.log("there is bottom,can't move down again!");
+						//一次方块到底部，清除定时器并重新生成形状
 						clearInterval(_this.gameTimer);
 						_this.startGame();
 					}
-				},1000);
+				},600);
 			}else{
-				_this.shutGame();
+				_this.endGame();
 				alert("Game Over!");
 			}
 		},
@@ -217,7 +256,14 @@
 		
 		//暂停游戏
 		shutGame : function(){
-			this.runningGameFlag = false;
+			this.runningGameFlag = 2;
+			clearInterval(this.gameTimer);
+		},
+		
+		//结束游戏
+		endGame : function(){
+			this.runningGameFlag = 3;
+			$("#startEndGame").val("游戏结束")
 			clearInterval(this.gameTimer);
 		},
 		
@@ -226,7 +272,11 @@
 			for(var i=this.height-1; i>=0; i--){
 				if($("#gameDesk .box-row:eq("+i+") .box-static").length == this.width){
 					//第i行所有格子去掉颜色，然后所有大于i行都下移
-					$("#gameDesk .box-row:eq("+i+")").toggleClass("box-row").fadeOut();
+					$("#gameDesk .box-row:eq("+i+")").toggleClass("box-row").fadeOut().remove();
+					//更新分数
+					this.score += 10;
+					$(".box-score span").text(this.score);
+					//补全被销毁的行
 					$("#newRow").after(this.getSingleRow());
 					i++;
 				}
@@ -239,10 +289,10 @@
 			var _this = this;
 			$("#startEndGame").click(function(){
 				var value = $(this).val();
-				if(value=="开始游戏"){
+				if(_this.runningGameFlag == 0 || _this.runningGameFlag == 2){
 					_this.startGame();
 					$(this).val("暂停游戏");
-				}else{
+				}else if(_this.runningGameFlag == 1){
 					_this.shutGame();
 					$(this).val("开始游戏");
 				}
@@ -250,11 +300,11 @@
 			
 			//键盘事件，控制游戏
 			$(document).keydown(function(event){
-				if(!_this.runningGameFlag){return ;}
+				if(!_this.runningGameFlag == 3){return ;}
 				switch(event.keyCode){
 					case 32: $("#startEndGame").click();break;
 					case 37: _this.moveLeft();break;
-					case 38: _this.rotateShape();break;
+					case 38: _this.rotate();break;
 					case 39: _this.moveRight();break;
 					case 40: _this.moveBottom();break;
 				}
@@ -287,4 +337,4 @@
 	
 })()
 
-Tetris.init({"width":"12","height":"15"});
+Tetris.init({"width":"20","height":"15"});

@@ -26,16 +26,27 @@
 				display: inline-block;
 				float: left;
 			}
-			.box-fill,.box-static{
-				background:yellowgreen;
+			.example-row{
+				height: 30px;
+				width: 120px;
+				margin: 0 auto;
 			}
+			.example-cell{
+				box-sizing: border-box;
+				height: 30px;
+				width: 30px;
+				display: inline-block;
+				float: left;
+			}
+			.box-fill,.box-static{background:yellowgreen;}
+			.box-red{background: red;}
 			.game-arg{
 				position: absolute;
 				top: 100px;
-				right: 150px;
 				width: 200px;
 				height: 300px;
 				border: 1px solid #C0C0C0;
+				margin-left:10px;
 			}
 			.game-arg .box-shape{
 				width: 200px;
@@ -60,11 +71,13 @@
 			.game-arg .box-start-shut .btn{
 				display: block;
 				margin: 10px auto;
+				padding: 5px 10px;
 				height: 30px;
 				background: #2ebeef;
 				border: 1px solid #2EBEEF;
 				border-radius: 4px;
 				color: #fff;
+				
 			}
 		</style>
 	</head>
@@ -74,7 +87,32 @@
 			
 		</div>
 		<div class="game-arg">
-			<div class="box-shape"></div>
+			<div class="box-shape">
+				<div class="example-row" style="padding-top: 40px;">
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+				</div>
+				<div class="example-row">
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+				</div>
+				<div class="example-row">
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+				</div>
+				<div class="example-row">
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+					<div class="example-cell"></div>
+				</div>
+			</div>
 			<div class="box-score">得分：<span>0</span></div>
 			<div class="box-start-shut"><input id="startEndGame" type="button" class="btn" value="开始游戏" /></div>
 		</div>
