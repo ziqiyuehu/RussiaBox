@@ -9,6 +9,8 @@
 		init : function(opts) {
 			this.width = opts && opts.width || 12;
 			this.height = opts && opts.height || 10;
+			this.deskW = 30*this.width+"px";
+			this.deskH = 30*this.height+"px";
 			this.score = 0;
 			//六种初始形状
 			this.shapes = [
@@ -79,13 +81,12 @@
 			for(var i=0; i<this.height; i++){
 				html += this.getSingleRow();
 			}
-			$("#gameDesk").empty().html(html).css({width:30*this.width+"px",height:30*this.height+"px"});
-			$("#gameDesk .box-row").css("width",30*this.width+"px");
+			$("#gameDesk").empty().html(html).css({width:this.deskW,height:this.deskH});
 		},
 		
 		//获取一行html
 		getSingleRow : function(){
-			var html = '<div class="box-row">';
+			var html = '<div class="box-row" style="width:'+this.deskW+'">';
 			for(var j=0; j<this.width; j++){
 				html += '<div class="single-box"></div>';
 			}
@@ -98,16 +99,18 @@
 			var arrayIndex = Math.floor(Math.random()*this.shapes.length);
 			shape = this.shapes[arrayIndex];
 			this.currShape = this.deepCopy(shape);
-			debugger
 			rotateShape = this.rotateShapes[arrayIndex];
+			// 旋转进度置为0
 			this.rotateIndex = 0;
 			var returnFlag = true;
 			$(".box-shape .example-row .example-cell").removeClass("box-fill");
 			for(var i=0; i<4; i++){
 				if($("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").hasClass("box-static")){
+					// 如果随机的形状有冲突返回false并标红
 					returnFlag = false;
 					$("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").addClass("box-red");
 				}else{
+					// 无冲突则正常渲染
 					$("#gameDesk .box-row:eq("+shape[i].x+") .single-box:eq("+shape[i].y+")").addClass("box-fill");
 					$(".box-shape .example-row:eq("+shape[i].x+") .example-cell:eq("+(shape[i].y-4)+")").addClass("box-fill");
 				}
@@ -177,7 +180,6 @@
 				$(".box-shape .example-row .example-cell").removeClass("box-fill");
 				var arrX = new Array();
 				var arrY = new Array();
-				debugger
 				for(var i=0; i<4; i++){
 					this.currShape[i].x += shapeTransf[i].x;
 					this.currShape[i].y += shapeTransf[i].y;
@@ -190,7 +192,7 @@
 					$(".box-shape .example-row:eq("+(this.currShape[i].x-minX)+") .example-cell:eq("+(this.currShape[i].y-minY)+")").addClass("box-fill");
 				}
 				this.rotateIndex++;
-				this.rotateIndex>=rotateShape.length && (this.rotateIndex = 0);
+				this.rotateIndex >= rotateShape.length && (this.rotateIndex = 0);
 			}
 			this.rewrite(flag);
 		},
@@ -245,9 +247,11 @@
 		
 		//检查冲突
 		checkConflict : function(x,y){
+			// 越界
 			if(y<0 || y>this.width-1 || x<0 || x>this.height-1){
 				return false;
 			}
+			// 碰撞
 			if($("#gameDesk .box-row:eq("+x+") .single-box:eq("+y+")").hasClass("box-static")){
 				return false;
 			}
@@ -272,7 +276,7 @@
 			for(var i=this.height-1; i>=0; i--){
 				if($("#gameDesk .box-row:eq("+i+") .box-static").length == this.width){
 					//第i行所有格子去掉颜色，然后所有大于i行都下移
-					$("#gameDesk .box-row:eq("+i+")").toggleClass("box-row").fadeOut().remove();
+					$("#gameDesk .box-row:eq("+i+")").toggleClass("box-row").fadeOut(500);
 					//更新分数
 					this.score += 10;
 					$(".box-score span").text(this.score);
